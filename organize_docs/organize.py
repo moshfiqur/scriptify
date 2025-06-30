@@ -59,11 +59,14 @@ def organize_files(dry_run):
                 # --- Handle Directories ---
                 if os.path.isdir(source_item_path):
                     destination_folder_path = os.path.join(target_base_dir, item)
-                    print(f"[Folder] '{source_item_path}' -> '{destination_folder_path}'")
-                    if not dry_run:
-                        # shutil.copytree will copy the entire directory recursively.
-                        # `dirs_exist_ok=True` prevents errors if the destination already exists.
-                        shutil.copytree(source_item_path, destination_folder_path, dirs_exist_ok=True)
+                    if os.path.exists(destination_folder_path):
+                        print(f"[Folder] '{source_item_path}' -> '{destination_folder_path}' (SKIPPED - already exists)")
+                    else:
+                        print(f"[Folder] '{source_item_path}' -> '{destination_folder_path}'")
+                        if not dry_run:
+                            # shutil.copytree will copy the entire directory recursively.
+                            # `dirs_exist_ok=True` prevents errors if the destination already exists.
+                            shutil.copytree(source_item_path, destination_folder_path, dirs_exist_ok=True)
 
                 # --- Handle Files ---
                 elif os.path.isfile(source_item_path):
@@ -84,15 +87,19 @@ def organize_files(dry_run):
                     destination_folder_path = os.path.join(target_base_dir, destination_folder_name)
                     destination_file_path = os.path.join(destination_folder_path, item)
 
-                    print(f"[File]   '{source_item_path}' -> '{destination_file_path}'")
+                    # Check if file already exists in destination
+                    if os.path.exists(destination_file_path):
+                        print(f"[File]   '{source_item_path}' -> '{destination_file_path}' (SKIPPED - already exists)")
+                    else:
+                        print(f"[File]   '{source_item_path}' -> '{destination_file_path}'")
 
-                    if not dry_run:
-                        # Create the destination subfolder if it doesn't exist
-                        if not os.path.exists(destination_folder_path):
-                            os.makedirs(destination_folder_path)
-                        
-                        # Copy the file
-                        shutil.copy2(source_item_path, destination_file_path)
+                        if not dry_run:
+                            # Create the destination subfolder if it doesn't exist
+                            if not os.path.exists(destination_folder_path):
+                                os.makedirs(destination_folder_path)
+
+                            # Copy the file
+                            shutil.copy2(source_item_path, destination_file_path)
             
             except Exception as e:
                 print(f"Error processing '{source_item_path}': {e}")
