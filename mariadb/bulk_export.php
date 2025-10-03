@@ -31,6 +31,28 @@ try {
     exit(1);
 }
 
+// Detect event scheduler status to decide whether to dump events
+$eventSchedulerOn = false;
+try {
+    $stmtVar = $pdo->query("SHOW VARIABLES LIKE 'event_scheduler'");
+    $row = $stmtVar->fetch(PDO::FETCH_ASSOC);
+    if ($row && isset($row['Value'])) {
+        $eventSchedulerOn = strtolower((string)$row['Value']) === 'on';
+    }
+} catch (Throwable $e) {
+    // If unknown, default to false to avoid mysqldump failure
+}
+
+// Detect if INFORMATION_SCHEMA.LIBRARIES exists to decide on dumping routines with this client
+$supportsLibraries = false;
+try {
+    $stmtLib = $pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='information_schema' AND table_name='LIBRARIES'");
+    $supportsLibraries = ((int)$stmtLib->fetch(PDO::FETCH_COLUMN) > 0);
+} catch (Throwable $e) {
+    // Be conservative; if unknown, assume false to avoid client/server mismatch
+    $supportsLibraries = false;
+}
+
 // Exclude system databases and common defaults
 $systemDbs = [
     'information_schema',
@@ -62,6 +84,12 @@ if ($mysqldump === '') {
 }
 
 $timestamp = date('Ymd_His');
+if (!$eventSchedulerOn) {
+    echo "Note: event_scheduler is OFF; skipping --events in dumps.\n";
+}
+if (!$supportsLibraries) {
+    echo "Note: information_schema.LIBRARIES not found; skipping --routines to avoid client/server mismatch.\n";
+}
 
 foreach ($databases as $db) {
     $safeName = preg_replace('/[^A-Za-z0-9_.-]/', '_', (string)$db);
@@ -75,9 +103,7 @@ foreach ($databases as $db) {
         '--user=' . escapeshellarg($user),
         '--single-transaction',            // Consistent snapshot without locking
         '--quick',
-        '--routines',
         '--triggers',
-        '--events',
         '--hex-blob',
         '--set-gtid-purged=OFF',
         '--add-drop-table',
@@ -86,6 +112,13 @@ foreach ($databases as $db) {
         '--databases', escapeshellarg((string)$db), // Include CREATE DATABASE / USE statements
         '--result-file=' . escapeshellarg($filePath),
     ];
+
+    if ($supportsLibraries) {
+        $cmdParts[] = '--routines';
+    }
+    if ($eventSchedulerOn) {
+        $cmdParts[] = '--events';
+    }
 
     $cmd = implode(' ', $cmdParts);
 
