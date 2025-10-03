@@ -209,3 +209,6 @@ target/
 # For example:
 # my-custom-output/
 # generated-files/
+
+# --- MariaDB ---
+exported/
