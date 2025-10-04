@@ -80,6 +80,9 @@ while IFS= read -r -d '' src; do
   magick "$src" \
     -resize "$geom" \
     -strip \
+    -colors 256 \
+    -depth 8 \
+    -quality 75 \
     -define png:compression-filter=5 \
     -define png:compression-level=9 \
     "$dst"
