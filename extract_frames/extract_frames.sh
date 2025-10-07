@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+
+# Extracts frames from an MP4 video file and saves them as PNGs.
+# Usage: extract_frames -i input.mp4 -f fps=24 -o frames -y
+# Example: extract_frames -i run_r_loop.mp4 -f 24 -o frames/1024/
+
 set -euo pipefail
 
 usage() {

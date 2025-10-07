@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+
+# Resizes all PNG images from input_dir, preserving aspect ratio, and write to output_dir.
+# Applies lossless PNG compression (strips metadata and uses maximum zlib compression).
+# resize_images -i frames/1024 -o frames/256 -W 256
+
 set -euo pipefail
 
 usage() {

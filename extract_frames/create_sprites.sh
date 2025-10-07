@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# Creates sprite.png in the current directory by horizontally appending PNGs sorted by filename.
+# Udage: create_sprites frames/256/
+
 set -euo pipefail
 
 usage() {
